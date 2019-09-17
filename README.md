@@ -76,10 +76,51 @@ Caso queiramos utilizar uma convenção própria, exemplo, nomenclatura, campos 
 O tamanho máximo por lotes de operações em massa é definido pelo **Database Provider**, o EF Core irá enviar os dados agrupados de acordo com essa quantidade.
 Podemos alterar essa quantidade no método OnConfiguring do DbContext, respeitando as limitações do provider/db.
 
-## LINQ Queries
+# LINQ Queries
 Linq queries podem ser efetuadas como métodos ou como Query. É importante entrar em um consenso com a equipe sobre qual o formato desejado.
 
 ```c#
 // Method
 context.Samurais.ToList();
+
+// Query
+(from s in context.Samurais select s).ToList();
+```
+
+O EF Core irá tentar se adaptar ao que você está fazendo. Por exemplo:
+
+```c#
+// Irá deixar a conexão aberta com o banco até a finalização do Loop. 
+foreach (var s in context.Samurais)
+{
+	RunSomeValidator(s.Name);
+	CallSomeService(s.Id);
+}
+
+// Irá puxar tudo em memória e encerrar a conexão.
+var samurais = context.Samurais.ToList();
+foreach (var s in context.Samurais)
+{
+	RunSomeValidator(s.Name);
+	CallSomeService(s.Id);
+}
+```
+
+### Características
+É importante lembrar algumas características dos métodos de uma Linq Query.
+
+- Os métodos `LastOrDefault()` e `Last()` requerem que a Query possua um `OrderBy()`, caso não possua, ela irá retornar **TODOS** os resultados e retornar o último.
+- Os métodos `SingleOrDefault()` e `Single()` requerem que a Query retorne apenas 1 resultado. Caso retorne mais que um, irá lançar um **Erro**.
+- Os métodos `FirstOrDefault()` e `First()` por outro lado, apenas pegam o primeiro entre os resultados da Query.
+
+Observação: Os métodos que não possuem o `OrDefault` irão retornar um erro, caso não haja nenhum resultado. Os métodos que possuem o `OrDefault` por outro lado, retorna null caso não haja resultados.
+Observação²: Todos os métodos Linq possuem sua contra partida com `Async` no final, utilizados para efetuar queries de maneira Assíncrona.
+Observação³: Caso seja utilizado variáveis como parâmetro de uma Linq Query, o EFCore irá automaticamente transformar esse parâmetro num placeholder (Anti-Injection \o/);
+
+
+## Obs
+- `Ctrl + E, C` ou `Ctrl + K, C`: Auto comentar código
+- `Ctrl + E, U` ou `Ctrl + K, U`: Auto descomentar código
+- `Configuration.GetConnectionString("SamuraiConnection")`: Captura a String de Conexão definida no arquivo `appsetings.json`, sendo **ConnectionStrings->>'SamuraiConnection'**.
+- É possível habilitar a Migração de forma automática para que o banco se ajuste automáticamente quando estiver em produção. Mas essa técnica deve ser implementada apenas se o caso de uso permitir. [Documentação](https://docs.microsoft.com/en-us/ef/core/managing-schemas/migrations/#apply-migrations-at-runtime) 
 

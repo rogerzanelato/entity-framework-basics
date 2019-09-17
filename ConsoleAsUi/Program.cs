@@ -31,11 +31,12 @@ namespace ConsoleAsUi
             //AddChildToExistingObjectWhileTracked();
             //AddChildToExistingObjectWhileNotTracked(3);
             //EagerLoadSamuraiWithQuotes();
+            //LoadReferencesSeparated();
             //LazyLoadSamuraiWithQuotes(); // LazyLoad não está adicionado ainda ao EFCore mas estará num futuro imprevisto
             //ProjectSomeProperties();
             //FilteringWithRelatedData();
             //ModifyingRelatedDataWhenTracked();
-            ModifyingRelatedDataWhenNotTracked();
+            //ModifyingRelatedDataWhenNotTracked();
         }
 
         private static void InsertSamurai()
@@ -266,6 +267,13 @@ namespace ConsoleAsUi
                                                     .Include(samurai => samurai.SecretIdentity)
                                                     .FirstOrDefault();
 
+        }
+
+        private static void LoadReferencesSeparated()
+        {
+            var samurai = _context.Samurais.FirstOrDefault();
+            _context.Entry(samurai).Reference(pSamurai => pSamurai.SecretIdentity).Load(); // carrega sua foreign key
+            _context.Entry(samurai).Collection(pSamurai => pSamurai.Quotes).Load(); // carrega suas Quotes
         }
 
         public struct IdAndName
